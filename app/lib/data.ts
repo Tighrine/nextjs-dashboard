@@ -1,7 +1,7 @@
 import { db } from '@vercel/postgres';
 import {
-  CustomerField,
   CustomersTableType,
+  FormattedCustomersTable,
   InvoiceForm,
   InvoicesTable,
   LatestInvoiceRaw,
@@ -172,12 +172,23 @@ export async function fetchInvoiceById(id: string) {
 export async function fetchCustomers() {
   try {
     const client = await initClient();
-    const data = await client.sql<CustomerField>`
-      SELECT
-        id,
-        name
-      FROM customers
-      ORDER BY name ASC
+    const data = await client.sql<FormattedCustomersTable>`
+      SELECT 
+        c.id,
+        c.name,
+        c.email,
+        c.image_url,
+        COUNT(i.customer_id) AS total_invoices,
+        SUM(CASE WHEN i.status = 'pending' THEN 1 ELSE 0 END) AS total_pending,
+        SUM(CASE WHEN i.status = 'paid' THEN 1 ELSE 0 END) AS total_paid
+      FROM 
+        customers c
+      LEFT JOIN 
+        invoices i 
+      ON 
+        c.id = i.customer_id
+      GROUP BY 
+        c.id, c.name, c.email, c.image_url;
     `;
 
     const customers = data.rows;
@@ -219,5 +230,16 @@ export async function fetchFilteredCustomers(query: string) {
   } catch (err) {
     console.error('Database Error:', err);
     throw new Error('Failed to fetch customer table.');
+  }
+}
+
+export async function fetchCustomersPages(query: string) {
+  try {
+    const client = await initClient();
+    const count = await client.sql`SELECT COUNT(*) FROM customers WHERE name ILIKE ${`%${query}%`}`;
+    return Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch total number of customers.');
   }
 }

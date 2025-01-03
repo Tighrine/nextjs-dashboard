@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
-export type State = {
+export type InvoiceState = {
     errors?: {
         customerId?: string[];
         amount?: string[];
@@ -32,7 +32,7 @@ const InvoiceSchema = z.object({
 
 const CreateInvoice = InvoiceSchema.omit({ id: true, date: true });
 
-export const createInvoice = async (prevState: State, formData: FormData) => {
+export const createInvoice = async (prevState: InvoiceState, formData: FormData) => {
     const validatedFields = CreateInvoice.safeParse({
         customerId: formData.get('customerId'),
         amount: formData.get('amount'),
@@ -64,7 +64,7 @@ export const createInvoice = async (prevState: State, formData: FormData) => {
     redirect('/dashboard/invoices');
 };
 
-export const updateInvoice = async (id: string, prevState: State, formData: FormData) => {
+export const updateInvoice = async (id: string, prevState: InvoiceState, formData: FormData) => {
     const validatedFields = CreateInvoice.safeParse({
         customerId: formData.get('customerId'),
         amount: formData.get('amount'),
@@ -110,18 +110,46 @@ export const deleteInvoice = async (id: string) => {
     revalidatePath('/dashboard/invoices');
 };
 
-export const authenticate = async (prevState: string | undefined, formData: FormData) => {
+const authSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6),
+});
+
+export type AuthState = {
+    errors?: {
+        email?: string[];
+        password?: string[];
+    };
+    message?: string | null;
+};
+
+export const authenticate = async (prevState: AuthState, formData: FormData): Promise<AuthState> => {
+    console.log('prevState AuthState: ', prevState);
+
     try {
-        await signIn('credentials', formData);
-    } catch (error) {
-        if (error instanceof AuthError) {
-            switch (error.type) {
-                case 'CredentialsSignin':
-                    return 'Invalid credentials.';
-                default:
-                    return 'Something went wrong.';
-            }
+        const validatedFields = authSchema.safeParse({
+            email: formData.get('email'),
+            password: formData.get('password'),
+        });
+        if (!validatedFields.success) {
+            return {
+                errors: validatedFields.error.flatten().fieldErrors,
+                message: 'Missing Fields. authentication failed.',
+            };
         }
-        throw error;
+        const credentials = validatedFields.data;
+        await signIn('credentials', { ...credentials, redirectTo: '/dashboard' });
+        return {
+            errors: {},
+            message: 'Success'
+        };
+    } catch (error) {
+        return {
+            errors: {
+                email: ['Authentication failed'],
+                password: ['Invalid credentials']
+            },
+            message: 'Error occurred'
+        };
     }
 };

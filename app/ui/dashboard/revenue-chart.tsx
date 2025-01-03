@@ -12,7 +12,6 @@ import { fetchRevenue } from '@/app/lib/data';
 
 export default async function RevenueChart() {
   const revenue: Revenue[] = await fetchRevenue();
-  console.log('revenue: ', revenue);
 
   const chartHeight = 350;
   // NOTE: Uncomment this code in Chapter 7

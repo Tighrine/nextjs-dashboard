@@ -9,11 +9,11 @@ import {
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '@/app/ui/button';
-import { createInvoice, State } from '@/app/lib/action';
+import { createInvoice, InvoiceState } from '@/app/lib/invoice-action';
 import { useActionState } from 'react';
 
 const Form = ({ customers }: { customers: CustomerField[] }) => {
-  const initialState: State = { message: null, errors: {} };
+  const initialState: InvoiceState = { message: null, errors: {} };
   const [state, formAction] = useActionState(createInvoice, initialState);
   return (
     <form action={formAction}>

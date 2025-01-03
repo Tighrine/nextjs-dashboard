@@ -9,10 +9,17 @@ import {
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from './button';
 import { useActionState } from 'react';
-import { authenticate } from '../lib/action';
+import { authenticate, AuthState } from '../lib/invoice-action';
 
 export default function LoginForm() {
-  const [errorMessage, formAction, isPending] = useActionState(authenticate, undefined);
+  const initialState: AuthState = {
+    message: '',    // Initialize with empty string instead of null
+    errors: {
+      email: undefined,
+      password: undefined
+    }
+  };
+  const [errorMessage, formAction, isPending] = useActionState(authenticate, initialState);
   return (
     <form action={formAction} className="space-y-3">
       <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
