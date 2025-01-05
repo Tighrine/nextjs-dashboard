@@ -57,7 +57,7 @@ export async function createCustomer(prevState: State, formData: FormData) {
         return { message: 'Created Customer!' };
     } catch (error) {
         return {
-            message: 'Database Error: Failed to Create Customer.',
+            message: 'Database Error: Failed to Create Customer.' + error,
         };
     }
 }

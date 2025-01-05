@@ -1,9 +1,9 @@
 import Form from '@/app/ui/customers/create-form';
 import Breadcrumbs from '@/app/ui/invoices/breadcrumbs';
-import { fetchCustomers } from '@/app/lib/data';
+//import { fetchCustomers } from '@/app/lib/data';
 
 const Page = async () => {
-    const customers = await fetchCustomers();
+    //const customers = await fetchCustomers();
 
     return (
         <main>
