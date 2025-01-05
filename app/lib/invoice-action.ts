@@ -122,7 +122,6 @@ export type AuthState = {
     message?: string | null;
 };
 
-//@ts-ignore
 export const authenticate = async (prevState: AuthState, formData: FormData): Promise<AuthState> => {
     const validatedFields = authSchema.safeParse({
         email: formData.get('email'),
@@ -139,6 +138,6 @@ export const authenticate = async (prevState: AuthState, formData: FormData): Pr
         await signIn('credentials', { ...credentials, redirect: false });
         redirect('/dashboard');
     } catch (error) {
-        throw new AuthError('Failed to authenticate user.');
+        throw new AuthError('Failed to authenticate user.' + error);
     }
 };
