@@ -89,7 +89,7 @@ export const updateInvoice = async (id: string, prevState: InvoiceState, formDat
             WHERE id = ${id}
         `;
     } catch (error) {
-        throw Error(`Database Error: Failed to Update Invoice. ${error}`);
+        throw new Error(`Database Error: Failed to Update Invoice. ${error}`);
     }
 
     revalidatePath('/dashboard/invoices');
@@ -97,7 +97,6 @@ export const updateInvoice = async (id: string, prevState: InvoiceState, formDat
 };
 
 export const deleteInvoice = async (id: string) => {
-    //throw new Error('Failed to Delete Invoice');
     try {
         const client = await db.connect();
         await client.sql`
@@ -123,33 +122,23 @@ export type AuthState = {
     message?: string | null;
 };
 
+//@ts-ignore
 export const authenticate = async (prevState: AuthState, formData: FormData): Promise<AuthState> => {
-    console.log('prevState AuthState: ', prevState);
-
+    const validatedFields = authSchema.safeParse({
+        email: formData.get('email'),
+        password: formData.get('password'),
+    });
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Missing Fields. authentication failed.',
+        };
+    }
     try {
-        const validatedFields = authSchema.safeParse({
-            email: formData.get('email'),
-            password: formData.get('password'),
-        });
-        if (!validatedFields.success) {
-            return {
-                errors: validatedFields.error.flatten().fieldErrors,
-                message: 'Missing Fields. authentication failed.',
-            };
-        }
         const credentials = validatedFields.data;
-        await signIn('credentials', { ...credentials, redirectTo: '/dashboard' });
-        return {
-            errors: {},
-            message: 'Success'
-        };
+        await signIn('credentials', { ...credentials, redirect: false });
+        redirect('/dashboard');
     } catch (error) {
-        return {
-            errors: {
-                email: ['Authentication failed'],
-                password: ['Invalid credentials']
-            },
-            message: 'Error occurred'
-        };
+        throw new AuthError('Failed to authenticate user.');
     }
 };
